@@ -16,6 +16,28 @@ import os
 import glob
 import random
 
+def df_prepare(texts: List[str], labels: List[int], test_size: float = 0.2, val_size: float = 0.1, seed: int = 42) -> Tuple:
+    
+    # split test and train
+    X_train_val, X_test, y_train_val, y_test = train_test_split(
+        texts, labels, test_size=test_size, random_state=seed, stratify=labels
+    )
+    # train and validation
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train_val, y_train_val, test_size=val_size, random_state=seed, stratify=y_train_val
+    )
+    # tfidf on train
+    vectoriser = TfidfVectorizer(
+        max_features=10000,
+        ngram_range=(1, 2),
+        stop_words="english",
+        sublinear_tf=True,
+    )
+    X_train_vec = vectoriser.fit_transform(X_train)
+    X_val_vec = vectoriser.transform(X_val)
+    X_test_vec = vectoriser.transform(X_test)
+    return vectoriser, X_train_vec, X_val_vec, X_test_vec, y_train, y_val, y_test
+
 def train_and_evaluate(positive_path: Optional[str],negative_path: Optional[str],model_output: str,vectorizer_output: str,min_words: int = 3,seed: int = 42,data_root: Optional[str] = None,) -> None:
     print("Loading and preprocessing reviews...")
     texts = []
